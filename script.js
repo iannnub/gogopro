@@ -53,6 +53,10 @@ function verifySession(code) {
     .then(response => response.json())
     .then(data => {
         if (data.status === true) {
+            // [NEW] Update UI Sisa Hari
+            if(data.data.remaining_days !== undefined) {
+                updateSubscriptionUI(data.data.remaining_days);
+            }
             showApp(); 
         } else {
             showAlert('Sesi Berakhir', 'Silakan login ulang untuk keamanan.');
@@ -88,6 +92,12 @@ function handleLogin() {
         btn.disabled = false;
         if (data.status === true) {
             localStorage.setItem("gogo_access_code", data.data.code);
+            
+            // [NEW] Update UI Sisa Hari setelah Login Sukses
+            if(data.data.remaining_days !== undefined) {
+                updateSubscriptionUI(data.data.remaining_days);
+            }
+
             showApp();
         } else {
             statusMsg.innerText = data.message;
@@ -112,10 +122,32 @@ function showApp() {
 
 
 // ==========================================
-// 3. UI HELPER & MODAL SYSTEM (UI MATCHING FIX)
+// 3. UI HELPER & MODAL SYSTEM
 // ==========================================
 
-// FUNGSI MODAL PINTAR (UPDATED: Support Custom Text)
+// [NEW] FUNGSI UPDATE BADGE SISA HARI
+function updateSubscriptionUI(days) {
+    const badge = document.getElementById('daysLeftBadge');
+    const valueSpan = document.getElementById('daysLeftValue');
+    
+    if(badge && valueSpan) {
+        valueSpan.innerText = days;
+        badge.classList.remove('hidden');
+        badge.classList.add('flex'); // Pastikan display flex aktif
+
+        // Logic Warna: Merah jika <= 3 hari, Abu-abu jika aman
+        if (days <= 3) {
+            badge.classList.remove('bg-gray-800', 'border-gray-700', 'text-gray-400');
+            badge.classList.add('bg-red-900/20', 'border-red-900/50', 'text-red-400');
+        } else {
+            // Reset ke default
+            badge.classList.remove('bg-red-900/20', 'border-red-900/50', 'text-red-400');
+            badge.classList.add('bg-gray-800', 'border-gray-700', 'text-gray-400');
+        }
+    }
+}
+
+// FUNGSI MODAL PINTAR
 function showModal(title, message, confirmHandler, theme = 'info', isConfirmation = true, customText = null) {
     const modal = document.getElementById('customModal');
     const backdrop = document.getElementById('modalBackdrop');
@@ -130,7 +162,6 @@ function showModal(title, message, confirmHandler, theme = 'info', isConfirmatio
     const icon = document.getElementById('modalIcon');
     const footerContainer = document.getElementById('modalFooterContainer') || btnConfirm.parentElement;
 
-    // Reset base classes
     const baseBtnClass = "inline-flex w-full justify-center items-center rounded-xl px-4 py-3.5 text-sm font-bold text-white shadow-lg transition-all btn-press border-b-4 active:border-b-0 active:translate-y-1 ";
     iconContainer.className = "mx-auto flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full mb-3 transition-colors duration-300 border-2 shadow-inner ";
 
@@ -138,21 +169,18 @@ function showModal(title, message, confirmHandler, theme = 'info', isConfirmatio
     let defaultText = "";
 
     if (theme === 'danger') {
-        // MERAH
         themeClasses = "bg-red-600 hover:bg-red-500 border-red-800 shadow-red-900/20";
         iconContainer.classList.add('bg-red-500/10', 'border-red-500/20');
         icon.className = "ph-duotone ph-warning-octagon text-3xl text-red-500";
         defaultText = `<i class="ph-bold ph-trash mr-2"></i> Hapus`;
     } 
     else if (theme === 'warning') {
-        // KUNING
         themeClasses = "bg-yellow-500 hover:bg-yellow-400 border-yellow-700 shadow-yellow-900/20 text-white";
         iconContainer.classList.add('bg-yellow-500/10', 'border-yellow-500/20');
         icon.className = "ph-duotone ph-hand-palm text-3xl text-yellow-500";
         defaultText = `<i class="ph-bold ph-hand-palm mr-2"></i> Tahan`;
     } 
     else {
-        // BIRU
         themeClasses = "bg-blue-600 hover:bg-blue-500 border-blue-800 shadow-blue-900/20";
         iconContainer.classList.add('bg-blue-500/10', 'border-blue-500/20');
         icon.className = "ph-duotone ph-info text-3xl text-blue-500";
@@ -161,14 +189,12 @@ function showModal(title, message, confirmHandler, theme = 'info', isConfirmatio
 
     btnConfirm.className = baseBtnClass + themeClasses;
 
-    // LOGIC TEKS TOMBOL: Pakai customText jika ada, kalau tidak pakai defaultText
     if(isConfirmation) {
         btnConfirm.innerHTML = customText || defaultText;
     } else {
         btnConfirm.innerHTML = "OK, Siap";
     }
 
-    // Clone node & Listener Setup
     const newConfirm = btnConfirm.cloneNode(true);
     btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
 
@@ -184,7 +210,6 @@ function showModal(title, message, confirmHandler, theme = 'info', isConfirmatio
         };
     }
 
-    // Layout Control
     if (isConfirmation) {
         if(btnCancel) btnCancel.classList.remove('hidden');
         footerContainer.classList.remove('grid-cols-1');
@@ -195,7 +220,6 @@ function showModal(title, message, confirmHandler, theme = 'info', isConfirmatio
         footerContainer.classList.add('grid-cols-1');
     }
 
-    // Animation
     modal.classList.remove('hidden');
     requestAnimationFrame(() => {
         backdrop.classList.remove('opacity-0');
@@ -222,10 +246,8 @@ function hideModal() {
     }, 200);
 }
 
-// UPDATE STATUS BADGE UI (UI FIX: Kotak bukan Bulat)
 function updateStatusBadge(type) {
     const statusEl = document.getElementById('roundStatus');
-    // UI FIX: Ganti 'rounded-full' jadi 'rounded-md' biar match sama UI baru
     const baseClass = "flex items-center gap-2 px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase transition-all duration-300";
     
     let themeClass = "", textHTML = "";
@@ -260,9 +282,7 @@ function doLogout() {
             localStorage.removeItem("gogo_access_code");
             location.reload();
         }, 
-        'danger', // Tema Merah
-        true,     // Mode Konfirmasi
-        `<i class="ph-bold ph-sign-out mr-2"></i> Keluar` // Custom Text: KELUAR
+        'danger', true, `<i class="ph-bold ph-sign-out mr-2"></i> Keluar`
     );
 }
 
@@ -291,9 +311,7 @@ function resetAll() {
             renderList(); 
             updateInfo(); 
         }, 
-        'danger', // Tema Merah
-        true,     // Mode Konfirmasi
-        `<i class="ph-bold ph-arrows-counter-clockwise mr-2"></i> Reset` // Custom Text: RESET
+        'danger', true, `<i class="ph-bold ph-arrows-counter-clockwise mr-2"></i> Reset`
     );
 }
 
@@ -442,7 +460,6 @@ function renderList() {
         const isTarget = (isFull && index === currentIndex);
         const div = document.createElement('div');
         
-        // UI FIX: Warna lebih gelap & solid untuk list item
         let wrapperClass = "flex justify-between items-center p-3 rounded-lg border transition-all duration-300 relative overflow-hidden group mb-1.5 ";
         
         if (enemy.isDead) {

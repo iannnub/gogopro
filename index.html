@@ -77,14 +77,24 @@
 
     <div id="appPage" class="bg-card-dark p-6 rounded-2xl shadow-xl border border-prime w-full hidden relative">
         
-        <header class="flex justify-between items-center mb-6">
+                <header class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center border border-prime">
+                <div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center border border-prime relative">
                     <img src="assets/img/logo-removebg-preview.png" class="w-6 h-6 object-contain">
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
                 </div>
                 <div>
                     <h1 class="text-base font-extrabold text-white leading-tight">GOGO TRACKER PRO</h1>
                     <span class="text-[10px] bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded text-xs font-bold border border-blue-500/20">System by iannnub</span>
+                    <div class="flex items-center gap-2 mt-1">
+                        <div id="daysLeftBadge" class="hidden items-center gap-1 text-[10px] bg-gray-800 px-2 py-0.5 rounded border border-gray-700 text-gray-400 font-mono">
+                            <i class="ph-bold ph-clock-countdown text-blue-400"></i>
+                            <span id="daysLeftValue">...</span> Hari
+                        </div>
+                    </div>
                 </div>
             </div>
             <button class="bg-red-600 hover:bg-red-500 text-white p-2 rounded-lg shadow-lg shadow-red-500/20 transition-all btn-press border-b-2 border-red-800 active:border-b-0 active:translate-y-0.5" onclick="doLogout()">
