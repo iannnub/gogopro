@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./*.html"], 
+  // PERBAIKAN DISINI: Tambahkan "./*.js" supaya script.js terbaca
+  content: ["./*.html", "./*.js"], 
   theme: {
     extend: {
       colors: {
