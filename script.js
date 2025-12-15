@@ -1,14 +1,13 @@
 // ==========================================
-// KONFIGURASI API (FINAL)
+// KONFIGURASI API
 // ==========================================
 const API_URL = "https://script.google.com/macros/s/AKfycbwExLvQEE0ge9m277E6z_mLHEVlLmpZ2tWf0QrpFUvYZoFrX1f14y7_-DTldpgscCCgYg/exec"; 
 
 // Variabel Global
 const customModal = document.getElementById('customModal');
-let markDeadIndex = -1; // Untuk menyimpan index musuh yang akan dimatikan
+let markDeadIndex = -1; 
 
-// --- SISTEM SECURITY & LOGIN ---
-
+// --- SISTEM SECURITY & LOGIN (TETAP SAMA) ---
 function getDeviceId() {
     let deviceId = localStorage.getItem("gogo_device_id");
     if (!deviceId) {
@@ -41,17 +40,12 @@ function verifySession(code) {
     formData.append("code", code);
     formData.append("device_id", getDeviceId());
 
-    fetch(API_URL, {
-        method: "POST",
-        body: formData
-    })
+    fetch(API_URL, { method: "POST", body: formData })
     .then(response => response.json())
     .then(data => {
         if (data.status === true) {
-            console.log("Session Valid: " + data.message);
             showApp(); 
         } else {
-            // Mengganti alert browser dengan custom modal
             showAlert('Sesi Berakhir', 'Sesi login Anda telah berakhir. Silakan login ulang.');
             localStorage.removeItem("gogo_access_code");
             statusMsg.innerText = data.message;
@@ -61,11 +55,8 @@ function verifySession(code) {
         }
     })
     .catch(error => {
-        console.error("Gagal verifikasi session:", error);
-        showAlert('Koneksi Gagal', 'Gagal terhubung ke server. Cek koneksi internet!');
-        statusMsg.innerText = "Gagal terhubung ke server. Cek koneksi internet!";
-        statusMsg.classList.remove('text-gray-400');
-        statusMsg.classList.add('text-red-400');
+        showAlert('Koneksi Gagal', 'Gagal terhubung ke server.');
+        statusMsg.innerText = "Gagal koneksi.";
         showLogin();
     });
 }
@@ -76,11 +67,10 @@ function handleLogin() {
     const statusMsg = document.getElementById("loginStatus");
     const deviceId = getDeviceId();
 
-    if (!codeInput) { showAlert('Akses Ditolak', 'Masukkan kode dulu bro!'); return; }
+    if (!codeInput) { showAlert('Akses Ditolak', 'Masukkan kode dulu!'); return; }
 
     btn.innerText = "⏳ Mengecek...";
     btn.disabled = true;
-    statusMsg.innerText = "";
 
     const formData = new FormData();
     formData.append("action", "login");
@@ -94,15 +84,10 @@ function handleLogin() {
         btn.disabled = false;
 
         if (data.status === true) {
-            statusMsg.innerText = "Login Berhasil!";
-            statusMsg.classList.remove('text-red-400', 'text-gray-400');
-            statusMsg.classList.add('text-green-500');
-
             localStorage.setItem("gogo_access_code", data.data.code);
             showApp();
         } else {
             statusMsg.innerText = data.message;
-            statusMsg.classList.remove('text-green-500', 'text-gray-400');
             statusMsg.classList.add('text-red-400');
         }
     })
@@ -110,11 +95,9 @@ function handleLogin() {
         btn.innerText = "MASUK SEKARANG";
         btn.disabled = false;
         statusMsg.innerText = "Error Koneksi!";
-        statusMsg.classList.add('text-red-400');
     });
 }
 
-// LOGIC KHUSUS LOGOUT DENGAN CUSTOM MODAL
 function handleLogoutConfirm() {
     hideModal();
     localStorage.removeItem("gogo_access_code");
@@ -122,8 +105,7 @@ function handleLogoutConfirm() {
 }
 
 function doLogout() {
-    // Mengganti confirm browser
-    showModal('Konfirmasi Keluar', 'Yakin mau keluar? Kode harus dimasukkan lagi nanti.', handleLogoutConfirm, true);
+    showModal('Konfirmasi Keluar', 'Yakin mau keluar?', handleLogoutConfirm, true);
 }
 
 function showLogin() {
@@ -135,9 +117,7 @@ function showApp() {
     document.getElementById("appPage").classList.remove("hidden");
 }
 
-// --- HELPER UNTUK CUSTOM MODAL (Updated Flexible Modal) ---
-
-// Fungsi utama untuk menampilkan modal (bisa Confirm atau Alert)
+// --- HELPER MODAL ---
 function showModal(title, message, confirmHandler, isConfirmation = true) {
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modalMessage').innerText = message;
@@ -145,47 +125,40 @@ function showModal(title, message, confirmHandler, isConfirmation = true) {
     const btnCancel = document.getElementById('btnCancel');
     const btnConfirm = document.getElementById('btnConfirm');
     
-    // Set handler untuk tombol Ya/OK
     btnConfirm.onclick = confirmHandler;
 
     if (isConfirmation) {
-        // Confirmation Mode (Ya/Batal)
         btnCancel.classList.remove('hidden');
         btnConfirm.innerText = "Ya, Lanjut";
         btnConfirm.classList.remove('bg-blue-600'); 
         btnConfirm.classList.add('bg-red-600'); 
     } else {
-        // Alert Mode (OK)
         btnCancel.classList.add('hidden');
         btnConfirm.innerText = "OK";
         btnConfirm.classList.remove('bg-red-600');
         btnConfirm.classList.add('bg-blue-600'); 
-        // Untuk Alert, handler OK otomatis hideModal
         btnConfirm.onclick = hideModal;
     }
 
     customModal.classList.remove('hidden');
-    // Animasi masuk
     customModal.querySelector('div').classList.remove('scale-95', 'opacity-0');
     customModal.querySelector('div').classList.add('scale-100', 'opacity-100');
 }
 
-// Helper untuk Alert sederhana (OK)
 function showAlert(title, message) {
     showModal(title, message, hideModal, false);
 }
 
 function hideModal() {
-    // Animasi keluar
     customModal.querySelector('div').classList.remove('scale-100', 'opacity-100');
     customModal.querySelector('div').classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        customModal.classList.add('hidden');
-    }, 300); // Tunggu animasi selesai
+    setTimeout(() => { customModal.classList.add('hidden'); }, 300);
 }
 
 
-// --- LOGIKA GAME PREDIKSI ---
+// ==========================================
+// 🔥 LOGIC GAME PREDIKSI (REVISI V2) 🔥
+// ==========================================
 let enemies = []; 
 let currentIndex = 0; 
 let isFull = false; 
@@ -207,7 +180,6 @@ function addEnemy() {
     if (enemies.length === 7) startPredictionMode();
 }
 
-// Listener untuk Tombol ENTER agar stabil
 document.addEventListener('DOMContentLoaded', () => {
     const enemyInput = document.getElementById('enemyInput');
     if (enemyInput) {
@@ -220,52 +192,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
 function startPredictionMode() {
     isFull = true;
     document.getElementById('inputSection').classList.add('hidden');
     document.getElementById('controlSection').classList.remove('hidden');
-    document.getElementById('roundStatus').innerText = "Fase: PREDIKSI AKTIF";
     
-    document.getElementById('roundStatus').classList.remove('bg-gray-600');
-    document.getElementById('roundStatus').classList.add('bg-neon-green', 'text-gray-900');
+    const statusEl = document.getElementById('roundStatus');
+    statusEl.innerText = "Fase: PREDIKSI AKTIF";
+    statusEl.classList.remove('bg-gray-600');
+    statusEl.classList.add('bg-neon-green', 'text-gray-900');
     
     showPrediction();
 }
 
-function nextRound() { moveIndexNext(); showPrediction(); }
+// 🟢 BUTTON 1: LAWAN SESUAI PREDIKSI
+// Logic: Geser index ke musuh berikutnya
+function nextRound() { 
+    moveIndexNext(); 
+    showPrediction(); 
+}
 
+// 🟡 BUTTON 2: KETEMU MIRROR (FIXED LOGIC)
+// Logic: JANGAN geser index. Target ronde depan TETAP musuh yang seharusnya dilawan sekarang.
 function metMirror() {
-    moveIndexNext();
-    showPrediction();
+    // Kita TIDAK memanggil moveIndexNext()
+    
+    // Hanya update visual
     const display = document.getElementById('predictionDisplay');
     const originalText = display.innerText;
     
-    display.innerText = "ROTASI DIGESER (MIRROR)";
+    display.innerText = "MIRROR (Target Tetap)";
     display.classList.remove('text-3xl', 'text-neon-green');
     display.classList.add('text-yellow-400', 'text-lg');
     
+    // Beri notif pop-up agar user paham
+    showAlert("Info Mirror", "Ketemu Mirror tidak mengubah antrian rotasi. Target selanjutnya tetap: " + originalText);
+
     setTimeout(() => {
         display.innerText = originalText;
         display.classList.remove('text-yellow-400', 'text-lg');
         display.classList.add('text-3xl', 'text-neon-green');
-        showPrediction(); 
-    }, 1200);
+        // Tidak perlu showPrediction() karena index tidak berubah
+    }, 1500);
 }
 
-// LOGIC KHUSUS SKIP ROUND DENGAN CUSTOM ALERT
+// ⚫ BUTTON 3: CREEP / FATEBOX
+// Logic: Tidak mengubah apa-apa, hanya lewat
 function skipRound() { 
-    showAlert('Fase Dilewati', "Fase Skip (Creep/Fatebox). Rotasi dan target tetap sama.");
+    showAlert('Fase Dilewati', "Fase Creep/Fatebox tidak mengubah target rotasi.");
 }
 
+// ⚙️ FUNGSI INTI ROTASI
 function moveIndexNext() {
+    // Geser index 1 langkah
     currentIndex++;
     if (currentIndex >= 7) currentIndex = 0;
+    
+    // Jika mendarat di musuh mati, cari yang hidup berikutnya
     skipDeadEnemies();
 }
 
 function skipDeadEnemies() {
     let attempts = 0;
+    // Loop max 8 kali untuk mencegah infinite loop jika semua mati
     while (enemies[currentIndex].isDead && attempts < 8) {
         currentIndex++;
         if (currentIndex >= 7) currentIndex = 0;
@@ -275,6 +264,8 @@ function skipDeadEnemies() {
 
 function showPrediction() {
     if (!isFull) return;
+    
+    // Pastikan index saat ini valid (bukan mayat)
     skipDeadEnemies();
     
     const aliveEnemies = enemies.filter(e => !e.isDead).length;
@@ -286,27 +277,42 @@ function showPrediction() {
 
     const target = enemies[currentIndex];
     document.getElementById('predictionDisplay').innerText = target.name;
+    
+    // Render ulang list untuk update highlight target
     renderList();
 }
 
-// LOGIC KHUSUS MARK DEAD DENGAN CUSTOM MODAL
+// 🔴 FUNGSI ELIMINASI MUSUH
 function handleMarkDeadConfirm() {
     hideModal();
     if (markDeadIndex !== -1) {
         enemies[markDeadIndex].isDead = true;
+        
+        // Jika yang mati adalah target saat ini, otomatis geser ke target hidup berikutnya
+        if (isFull && markDeadIndex === currentIndex) {
+            moveIndexNext(); 
+        }
+        
         renderList();
         updateInfo();
-        if (isFull && markDeadIndex === currentIndex) showPrediction();
+        if (isFull) showPrediction();
     }
-    markDeadIndex = -1; // Reset index
+    markDeadIndex = -1; 
 }
 
 function markDead(index) {
-    // Menyimpan index sementara sebelum konfirmasi
     markDeadIndex = index; 
     const name = enemies[index].name;
-    // Mengganti confirm browser
     showModal('Konfirmasi Eliminasi', `Yakin ${name} sudah eliminasi?`, handleMarkDeadConfirm, true);
+}
+
+// 🔵 FITUR BARU: KOREKSI MANUAL (SET TARGET)
+// Gunakan ini jika prediksi sistem salah, user bisa klik tombol untuk sync ulang.
+function setManualTarget(index) {
+    if (confirm(`Prediksi Salah? Set ${enemies[index].name} sebagai target ronde ini?`)) {
+        currentIndex = index;
+        showPrediction();
+    }
 }
 
 function updateInfo() {
@@ -330,27 +336,39 @@ function renderList() {
     }
     enemies.forEach((enemy, index) => {
         const div = document.createElement('div');
-        const isActive = (isFull && index === currentIndex && !enemy.isDead);
+        const isTarget = (isFull && index === currentIndex && !enemy.isDead);
         
-        div.className = `flex justify-between items-center p-3 rounded-lg ${enemy.isDead ? 'opacity-50 line-through bg-gray-900' : 'bg-gray-800'} ${isActive ? 'ring-2 ring-neon-green border border-neon-green' : 'border border-gray-700'}`;
+        // Styling List Item
+        div.className = `flex justify-between items-center p-3 rounded-lg mb-1 ${enemy.isDead ? 'opacity-50 bg-gray-900' : 'bg-gray-800'} ${isTarget ? 'ring-2 ring-neon-green border border-neon-green' : 'border border-gray-700'}`;
         
         div.innerHTML = `
-            <span class="text-sm">
-                <small class="text-gray-500 mr-2">#${index + 1}</small> 
-                ${enemy.name}
-            </span>
-            ${!enemy.isDead ? 
-                // Handler markDead tetap di HTML karena butuh index
-                `<button class="text-xs bg-red-600/20 text-red-400 border border-red-400/50 px-2 py-1 rounded-md hover:bg-red-600 hover:text-white" onclick="markDead(${index})">
-                    MATI 💀
-                </button>` : 
-                '<span class="text-sm text-gray-600">🪦</span>'}
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">#${index + 1}</span> 
+                <span class="text-sm font-semibold ${enemy.isDead ? 'line-through' : 'text-white'}">
+                    ${enemy.name}
+                    ${isTarget ? '<span class="ml-2 text-xs bg-neon-green text-black px-1 rounded font-bold">TARGET</span>' : ''}
+                </span>
+            </div>
+            
+            <div class="flex gap-2">
+                ${!enemy.isDead && isFull && !isTarget ? 
+                    // Tombol Koreksi (Hanya muncul jika mode prediksi aktif dan bukan target saat ini)
+                    `<button class="text-xs bg-blue-600/20 text-blue-400 border border-blue-400/50 px-2 py-1 rounded hover:bg-blue-600 hover:text-white" onclick="setManualTarget(${index})" title="Jadikan Target (Koreksi)">
+                        🎯 Set
+                    </button>` : ''
+                }
+                
+                ${!enemy.isDead ? 
+                    `<button class="text-xs bg-red-600/20 text-red-400 border border-red-400/50 px-2 py-1 rounded hover:bg-red-600 hover:text-white" onclick="markDead(${index})">
+                        💀
+                    </button>` : 
+                    '<span class="text-xs">🪦</span>'}
+            </div>
         `;
         container.appendChild(div);
     });
 }
 
-// LOGIC KHUSUS RESET ALL DENGAN CUSTOM MODAL
 function resetGameState() {
     enemies = []; 
     currentIndex = 0; 
@@ -358,12 +376,12 @@ function resetGameState() {
 
     document.getElementById('inputSection').classList.remove('hidden');
     document.getElementById('controlSection').classList.add('hidden');
-
     document.getElementById('predictionDisplay').innerText = "...";
     
-    document.getElementById('roundStatus').innerText = "Fase Input";
-    document.getElementById('roundStatus').classList.remove('bg-neon-green', 'text-gray-900');
-    document.getElementById('roundStatus').classList.add('bg-gray-600'); 
+    const statusEl = document.getElementById('roundStatus');
+    statusEl.innerText = "Fase Input";
+    statusEl.classList.remove('bg-neon-green', 'text-gray-900');
+    statusEl.classList.add('bg-gray-600'); 
     
     renderList(); 
     updateInfo(); 
@@ -375,8 +393,7 @@ function handleResetConfirm() {
 }
 
 function resetAll() {
-    showModal('Konfirmasi Reset', 'Yakin ingin mereset semua data permainan dan memulai game baru?', handleResetConfirm, true);
+    showModal('Konfirmasi Reset', 'Mulai game baru?', handleResetConfirm, true);
 }
 
-// JALANKAN CEK LOGIN SAAT HALAMAN DIBUKA
 checkLogin();
